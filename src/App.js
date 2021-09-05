@@ -1,24 +1,43 @@
-import logo from './logo.svg';
 import './App.css';
+import Layout from './components/layout/Layout'
+import Login from './components/layout/Login'
+import { createTheme, makeStyles, ThemeProvider } from '@material-ui/core/styles';
+import {
+  BrowserRouter as Router
+} from "react-router-dom";
+
+
+const theme = createTheme({
+  typography:{
+    fontFamily: "Montserrat, sans-serif",
+  },
+  palette: {
+    primary: {
+      main: "#d8db30",
+      dark: "#979921",
+      light: "#dfe259"
+    },
+    secondary: {
+      main: "#00C5C8",
+      dark: "#00898c",
+      light: "#33d0d3"
+    },
+    
+  },
+});
+
+
+
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <ThemeProvider theme={theme}>
+      <Router>
+      <div className="App">
+        <Layout />
+      </div>
+      </Router>
+    </ThemeProvider>
   );
 }
 
