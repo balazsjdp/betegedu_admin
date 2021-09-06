@@ -24,7 +24,7 @@ import {Link, Route, Switch} from 'react-router-dom';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
-
+import NotFound from '../Pages/404';
 
 const drawerWidth = 240;
 
@@ -96,7 +96,9 @@ const useStyles = makeStyles((theme) => ({
   container: {
     paddingTop: theme.spacing(3),
     paddingBottom: theme.spacing(3),
-    display: "flex"
+    display: "flex",
+    maxWidth: "100%",
+    flexDirection: "column"
   },
   paper: {
     padding: theme.spacing(2),
@@ -154,15 +156,18 @@ export default function Dashboard() {
         <Divider />
         <List>
            {
-               menuItems.map(i => {
-                   return (
-                     <ListItem component={Link} to={i.link} button>
+               menuItems.map((i,index) => {
+                 if(i.showInMenu){
+                  return (
+                    <ListItem key={index} component={Link} to={i.link} button>
                         <ListItemIcon>
                             <i.icon />
                         </ListItemIcon>
                         <ListItemText primary={i.displayName}/>
-                  </ListItem>  
-                );
+                    </ListItem>  
+                  );
+                 }
+                  
                })
            }
         </List>
@@ -170,16 +175,19 @@ export default function Dashboard() {
       <main className={classes.content}>
         <div className={classes.appBarSpacer} />
         <Container maxWidth="lg" className={classes.container}>
+        
             <Switch>
                 {
-                    menuItems.map(i => {
+                    menuItems.map((i,index) => {
                         return(
-                            <Route exact path={i.link}>
+                            <Route key={index} exact path={i.link}>
+                                  <h2>{i.displayName}</h2>
                                 <i.component />
                             </Route>
                         )
                     })
                 }
+                <Route path='*' exact={true} component={NotFound} />
             </Switch>
         </Container>
       </main>
