@@ -5,9 +5,11 @@ import { makeStyles } from '@material-ui/core/styles';
 const useStyles = makeStyles((theme) => ({
     root: {
       display: 'flex',
-      position: "absolute",
-      top: "50%",
-      left: "50%"
+      position: "relative",
+      height: "100%",
+      width: "100%",
+      justifyContent:"center",
+      alignContent: "center"
     }
   }));
 
