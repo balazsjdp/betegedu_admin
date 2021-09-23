@@ -1,5 +1,5 @@
-import { Paper } from "@material-ui/core";
-import { useParams } from "react-router";
+import { Link, Paper } from "@material-ui/core";
+import { useHistory, useParams } from "react-router";
 import NotFound from "./404";
 import { makeStyles } from "@material-ui/styles";
 import { TextField } from "@material-ui/core";
@@ -20,8 +20,13 @@ import { useEffect } from "react";
 import Loading from '../ui-components/Loading'; 
 import PhotoCamera from '@material-ui/icons/PhotoCamera';
 import Save from '@material-ui/icons/Save';
-
+import { useTheme } from "@material-ui/styles";
 import CustomAlert from "../ui-components/CustomAlert";
+import ClearIcon from '@material-ui/icons/Clear';
+import DeleteIcon from '@material-ui/icons/Delete';
+import ConfirmationDialog from "../ui-components/ConfirmationDialog";
+
+import { Link as RouterLink } from 'react-router-dom';
 
 import config from '../../config'
 const categories = config._post_categories;
@@ -59,7 +64,9 @@ const useStyles = makeStyles((theme) => (
             marginTop: theme.spacing(2),
             marginBottom: theme.spacing(2),
             maxWidth: "100%",
-            width: "100%"
+            width: "100%",
+            height: "209px",
+            objectFit: "cover"
         },
         saveButton: {
             marginTop: theme.spacing(2),
@@ -74,9 +81,11 @@ const Input = styled('input')({
 
 
 const EditPost = (props) => {
+    const theme = useTheme();
     const params = useParams()
     const classes = useStyles();
     const editorRef = useRef(null);
+    const history = useHistory();
     const [postData,setPostData] = useState(null);
     const [loading,setLoading] = useState(true);
     const [showSuccessAlert, setShowSuccessAlert] = useState(false);
@@ -87,10 +96,16 @@ const EditPost = (props) => {
     const [content, setContent] = useState();
     const [draft, setDraft] = useState();
     const [featured,setFeatured] = useState();
-    const [meta, setMeta] = useState()
+    const [meta, setMeta] = useState();
+
+    const [allPosts, setAllPosts] = useState();
+    const [relatedPosts, setRelatedPosts] = useState();
+    const [confirmDialogOpen, setConfigmDialogOpen] = useState(false);
+
 
     useEffect(() => {
         getPostData()
+
     },[])
 
     if(!params.postId) return <NotFound />;
@@ -112,9 +127,8 @@ const EditPost = (props) => {
                 setFeatured(postData.post_is_featured == 1 ? true : false);
                 setMeta(postData.post_meta)
 
-
                 setPostData(data[0])
-                setLoading(false);
+                getAllPosts()
             }else{
                 setLoading(false);
                 throw new Error("No post data")
@@ -126,6 +140,37 @@ const EditPost = (props) => {
         })
     }
 
+    function getAllPosts(){
+        setLoading(true)
+        console.log('getall')
+        fetch(`${apiBaseUrl}/post`)
+        .then((response) => {
+            return response.json()
+        })
+        .then((data) => {
+            console.log(data)
+            setAllPosts(data)
+            getRelatedPosts()
+        })
+        .catch((err) => {
+            console.log(err)
+            setLoading(false)
+        })
+    }
+
+    function getRelatedPosts(){
+        fetch(`${apiBaseUrl}/post/${params.postId}/related`)
+        .then((response) => {
+            return response.json();
+        })
+        .then((data) => {
+            setRelatedPosts(data.map(post => post.post_id))
+            setLoading(false)
+        })
+        .catch((err) => {
+            setLoading(false)
+        })
+    }
 
     function uploadFeaturedImage(e){
 
@@ -167,9 +212,35 @@ const EditPost = (props) => {
         setMeta(e.target.value)
     }
 
+    function onRelatedChange(e){
+        setRelatedPosts(Array.from(e.target.options).filter(o => o.selected).map(o => o.value))
+        console.log(Array.from(e.target.options).filter(o => o.selected).map(o => o.value))
+    }
+
+    function onDeletePost(){
+        setConfigmDialogOpen(true)
+    }
+
+    function deletePostConfirmResult(result){
+        setConfigmDialogOpen(false)
+        if(result){
+            // Delete post
+            fetch(apiBaseUrl + '/post/' + postData.post_id, {
+                method: 'DELETE'
+            })
+            .then(() => {
+                history.push("/posts");
+            })
+            .catch(() => {
+                ShowAlert('error')
+            })
+        }else{
+            return;
+        }
+    }
+
 
     function savePost(){
-
         const postData = {
             post_title : title,
             post_category: category,
@@ -177,9 +248,9 @@ const EditPost = (props) => {
             post_is_featured: featured,
             post_body: content,
             post_meta: meta,
-            post_id: params.postId
+            post_id: params.postId,
+            relatedPosts: relatedPosts
         }
-
 
         fetch(apiBaseUrl + '/post/' + params.postId, {
             method: "PUT",
@@ -209,6 +280,7 @@ const EditPost = (props) => {
     }
 
 
+
     if(loading){
         return (
             <Grid spacing={4} container className={classes.postEditorWrapper}>
@@ -220,6 +292,7 @@ const EditPost = (props) => {
     }else{
         return ( 
             <Grid spacing={4} container className={classes.postEditorWrapper}>
+                <ConfirmationDialog title={"Megerősítés szükséges!"} body={"Biztosan törli a posztot? A művelet nem visszavontható!"} cancelText={"Mégse"} confirmText={"Törlés"} callBack={deletePostConfirmResult} open={confirmDialogOpen} />
                 {<CustomAlert open={showSuccessAlert} severity={"success"} content={"Sikeres mentés"} />}
                 {<CustomAlert open={showErrorAlert} severity={"error"} content={"Hiba történt!"} />}
                 {/* Left side */}
@@ -282,21 +355,59 @@ const EditPost = (props) => {
                             </Grid>
                         </Grid>
                     </Paper>
-                    <Paper className={classes.paper}>
-                        <Typography variant="h5" component="h5">
-                           Kiemelt kép
-                        </Typography>
-                        <img className={classes.featuredImage} src={`${imagesPath}/${postData.post_featured_image}`} alt="" />
-                        <label htmlFor="contained-button-file">
-                            <Input onChange={uploadFeaturedImage} accept="image/*" id="contained-button-file" multiple type="file" />
-                            <Button color="primary" variant="contained" component="span">
-                            <PhotoCamera /> Új feltöltése  
-                            </Button>
-                        </label>
-                    </Paper>
+                   
                 </Grid>
                 {/* Right side */}
                 <Grid item xs={12} md={8}>
+                  <Grid container spacing={4}>
+                      <Grid item xs={12} md={6}>
+                        <Paper className={classes.paper}>
+                            <Typography variant="h5" component="h5">
+                            Kiemelt kép
+                            </Typography>
+                            <img className={classes.featuredImage} src={postData.post_featured_image ? `${imagesPath}/${postData.post_featured_image}` : '/img/placeholder.jpg'} alt="" />
+                            <label htmlFor="contained-button-file">
+                                <Input onChange={uploadFeaturedImage} accept="image/*" id="contained-button-file" multiple type="file" />
+                                <Button color="primary" variant="contained" component="span">
+                                <PhotoCamera /> Új feltöltése  
+                                </Button>
+                            </label>
+                        </Paper>
+                      </Grid>
+                      <Grid item xs={12} md={6}>
+                        <Paper className={classes.paper}>
+                            <Typography variant="h5" component="h5">
+                            Kapcsolódó posztok
+                            </Typography>
+                            
+                            <FormControl style={{marginTop: theme.spacing(3)}} className={classes.formControl}>
+                                <InputLabel shrink htmlFor="select-multiple-native">
+                                Kapcsolódó posztok kiválasztása
+                                </InputLabel>
+                                <Select
+                                multiple
+                                native
+                                value={relatedPosts}
+                                onChange={onRelatedChange}
+                                inputProps={{
+                                    id: 'select-multiple-native',
+                                }}
+                                >
+                                {allPosts.filter(post => post.post_id != postData.post_id).map((post) => (
+                                    <option key={post.post_id} value={post.post_id}>
+                                    {post.post_title}
+                                    </option>
+                                ))}
+                                </Select>
+                            </FormControl>
+                               
+                     
+                        </Paper>
+                      </Grid>
+                  </Grid>                   
+                </Grid>
+                {/* Editor*/}
+                <Grid item xs={12} md={12}>
                     <Paper className={classes.paper}>
                         <Typography style={{marginBottom: 16}} variant="h5" component="h5">
                             Tartalom
@@ -320,9 +431,11 @@ const EditPost = (props) => {
                             'removeformat | help',
 
                         }}
-                    />
-                    </Paper>
-                    <Button onClick={savePost} className={classes.saveButton} color="primary" variant="contained"><Save />Mentés</Button>
+                        />
+                        </Paper>
+                        <Button style={{marginLeft: theme.spacing(2)}} onClick={savePost} className={classes.saveButton} color="primary" variant="contained"><Save />Mentés</Button>
+                        <Button component={RouterLink} to="/posts" className={classes.saveButton} color="gray" variant="contained"><ClearIcon />Elvetés</Button>
+                        <Button style={{float: 'left', backgroundColor: "#f44336", color: "#fff"}} className={classes.saveButton} onClick={onDeletePost} variant="contained"><DeleteIcon />Törlés</Button>
                 </Grid>
             </Grid>
          );

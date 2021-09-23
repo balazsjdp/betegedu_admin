@@ -135,6 +135,24 @@ const Posts = () => {
         })
     }
 
+    function onNewPostClick(){
+        fetch(_api_base_url + '/post',{
+            method: 'POST',
+            body: JSON.stringify({
+                post_title : "Új poszt",
+                post_category: 1,
+                post_meta: "Meta leírás",
+                post_body: ""
+            })
+        })
+        .then(() => {
+            getPosts()
+        })
+        .catch((err) => {
+            console.log(err)
+        })
+    }
+
 
     if(loading){
        return  <Loading />
@@ -153,7 +171,7 @@ const Posts = () => {
                     getRowId={(row) => row.post_id}
                 />
             </Paper>
-            <Fab className={classes.fab} color="secondary" aria-label="add">
+            <Fab title="Új poszt" onClick={onNewPostClick} className={classes.fab} color="secondary" aria-label="Új poszt">
                 <AddIcon />
             </Fab>
         </Fragment>
