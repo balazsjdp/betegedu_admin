@@ -11,7 +11,9 @@ const constants = {
             name: "Vizelettartási problémák"
         }
     ],
-    _tiny_api_key: "a099g992q1ytxekiw7ai6uvxyccsmfrfrvxwzduas90g1814"
+    _tiny_api_key: "a099g992q1ytxekiw7ai6uvxyccsmfrfrvxwzduas90g1814",
+    _youtube_api_key: "AIzaSyAXpnt0JFFJSCeuHt1AHYA5ZkR2bbsOEMU",
+    _youtube_api_parts: "statistics,snippet"
 }
 
 export const _helpers = {

@@ -7,13 +7,9 @@ import Mic from "@material-ui/icons/Mic";
 import Dashboard from "../components/Pages/Dashboard"
 import Posts from "../components/Pages/Posts";
 import EditPost from "../components/Pages/EditPost";
+import Videos from "../components/Pages/Videos";
+import EditVideo from '../components/Pages/EditVideo'
 
-
-const Videos = () => {
-    return (
-        "Videos"
-    )
-}
 
 const Podcasts = () => {
     return (
@@ -61,6 +57,14 @@ const menuItems = [
         link: "/post/:postId",
         icon: PostAdd,
         component: EditPost
+    },
+    {
+        id: 6,
+        displayName: "Videó Szerkesztés",
+        showInMenu: false,
+        link: "/video/:videoId",
+        icon: PostAdd,
+        component: EditVideo
     }
 ];
 
