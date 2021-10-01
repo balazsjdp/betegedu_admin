@@ -6,18 +6,15 @@ import { DataGrid } from '@material-ui/data-grid';
 import { Paper } from '@material-ui/core';
 import { makeStyles, ThemeProvider } from '@material-ui/styles';
 import { Button } from '@material-ui/core';
-import { IconButton } from '@material-ui/core';
 import { Link } from 'react-router-dom';
-
 import EditIcon from '@material-ui/icons/Edit';
-import DeleteIcon from '@material-ui/icons/Delete';
-import ThumbUpAltIcon from '@material-ui/icons/ThumbUpAlt';
-import VisibilityIcon from '@material-ui/icons/Visibility';
 import Fab from '@material-ui/core/Fab';
 import AddIcon from '@material-ui/icons/Add';
+import NewVideoDialog from '../ui-components/NewVideoDialog'
+
 
 const {_api_base_url,_post_categories,_youtube_api_key,_youtube_api_parts} = constants
-
+const {getVideoTitle} = _helpers;
 
 const useStyles = makeStyles((theme) => (
     {
@@ -38,26 +35,16 @@ const useStyles = makeStyles((theme) => (
     }
 ));
 
-const getVideoTitle = async (videoId) => {
-    console.log(videoId)
-    const data = fetch(`https://www.googleapis.com/youtube/v3/videos?key=${_youtube_api_key}&id=${videoId}&part=${_youtube_api_parts}`)
-    .then((result) => {
-        return result.json();
-    })
-    .catch((err) => {
-        console.log(err)
-        return null;
-    })
-    return data;
-}
+
 
 const Videos = () => {
     const classes = useStyles()
     const [videos,setVideos] = useState();
     const [loading,setLoading] = useState(true);
+    const [newVideoDialogOpen, setNewVideoDialogOpen] = useState(false)
+
 
     const tableColumns =  [
-        { field: 'id', headerName: '#',flex:1 },
         {
           field: 'title',
           headerName: 'Cím',
@@ -137,21 +124,25 @@ const Videos = () => {
     }
 
     function onNewPostClick(){
-        fetch(_api_base_url + '/post',{
-            method: 'POST',
-            body: JSON.stringify({
-                post_title : "Új poszt",
-                post_category: 1,
-                post_meta: "Meta leírás",
-                post_body: ""
+        setNewVideoDialogOpen(true);
+    }
+
+    function newVideoDialogCallback(link, addVideo){
+        if(addVideo){
+            fetch(_api_base_url + '/video',{
+                method: 'POST',
+                body: JSON.stringify({
+                    link: link
+                })
             })
-        })
-        .then(() => {
-            getVideos()
-        })
-        .catch((err) => {
-            console.log(err)
-        })
+            .then(() => {
+                getVideos()
+            })
+            .catch((err) => {
+                console.log(err)
+            })
+        }
+        setNewVideoDialogOpen(false);
     }
 
 
@@ -161,6 +152,7 @@ const Videos = () => {
 
     return ( 
         <Fragment>
+            <NewVideoDialog callBack={newVideoDialogCallback} open={newVideoDialogOpen} />
             <Paper className={classes.paper}>
                 <DataGrid className={classes.table}
                     rows={videos}

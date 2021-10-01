@@ -19,6 +19,18 @@ const constants = {
 export const _helpers = {
     error: function(message){
         console.log(message)
+    },
+    getVideoTitle: async (videoId) => {
+        console.log(videoId)
+        const data = fetch(`https://www.googleapis.com/youtube/v3/videos?key=${constants._youtube_api_key}&id=${videoId}&part=${constants._youtube_api_parts}`)
+        .then((result) => {
+            return result.json();
+        })
+        .catch((err) => {
+            console.log(err)
+            return null;
+        })
+        return data;
     }
 }
 
