@@ -9,13 +9,8 @@ import Posts from "../components/Pages/Posts";
 import EditPost from "../components/Pages/EditPost";
 import Videos from "../components/Pages/Videos";
 import EditVideo from '../components/Pages/EditVideo'
-
-
-const Podcasts = () => {
-    return (
-        "Podcasts"
-    )
-}
+import Podcasts from "../components/Pages/Podcasts";
+import EditPodcast from '../components/Pages/EditPodcast'
 
 const menuItems = [
     {
@@ -65,6 +60,14 @@ const menuItems = [
         link: "/video/:videoId",
         icon: PostAdd,
         component: EditVideo
+    },
+    {
+        id: 7,
+        displayName: "Podcast Szerkesztés",
+        showInMenu: false,
+        link: "/podcast/:podcastId",
+        icon: PostAdd,
+        component: EditPodcast
     }
 ];
 

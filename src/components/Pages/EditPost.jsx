@@ -33,6 +33,7 @@ const categories = config._post_categories;
 const tinyApiKey = config._tiny_api_key;
 const apiBaseUrl = config._api_base_url;
 const imagesPath = config._images_path;
+const homepage = config._homepage;
 
 
 
@@ -365,7 +366,7 @@ const EditPost = (props) => {
                             <Typography variant="h5" component="h5">
                             Kiemelt kép
                             </Typography>
-                            <img className={classes.featuredImage} src={postData.post_featured_image ? `${imagesPath}/${postData.post_featured_image}` : '/img/placeholder.jpg'} alt="" />
+                            <img className={classes.featuredImage} src={postData.post_featured_image ? `${imagesPath}/${postData.post_featured_image}` : homepage + '/img/placeholder.jpg'} alt="" />
                             <label htmlFor="contained-button-file">
                                 <Input onChange={uploadFeaturedImage} accept="image/*" id="contained-button-file" multiple type="file" />
                                 <Button color="primary" variant="contained" component="span">
@@ -432,10 +433,10 @@ const EditPost = (props) => {
 
                         }}
                         />
-                        </Paper>
-                        <Button style={{marginLeft: theme.spacing(2)}} onClick={savePost} className={classes.saveButton} color="primary" variant="contained"><Save />Mentés</Button>
-                        <Button component={RouterLink} to="/posts" className={classes.saveButton} color="gray" variant="contained"><ClearIcon />Elvetés</Button>
-                        <Button style={{float: 'left', backgroundColor: "#f44336", color: "#fff"}} className={classes.saveButton} onClick={onDeletePost} variant="contained"><DeleteIcon />Törlés</Button>
+                    </Paper>
+                    <Button style={{marginLeft: theme.spacing(2)}} onClick={savePost} className={classes.saveButton} color="primary" variant="contained"><Save />Mentés</Button>
+                    <Button component={RouterLink} to="/posts" className={classes.saveButton} color="gray" variant="contained"><ClearIcon />Elvetés</Button>
+                    <Button style={{float: 'left', backgroundColor: "#f44336", color: "#fff"}} className={classes.saveButton} onClick={onDeletePost} variant="contained"><DeleteIcon />Törlés</Button>
                 </Grid>
             </Grid>
          );

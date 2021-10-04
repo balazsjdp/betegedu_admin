@@ -1,11 +1,15 @@
 import './App.css';
 import Layout from './components/layout/Layout'
 import Login from './components/layout/Login'
+import FullscreenLoading from './components/layout/FullscreenLoading';
 import { createTheme, makeStyles, ThemeProvider } from '@material-ui/core/styles';
 import {
   BrowserRouter as Router
 } from "react-router-dom";
+import { useEffect, useState } from 'react';
+import constants from './config'
 
+const {_api_base_url,_access_token_key} = constants;
 
 const theme = createTheme({
   typography:{
@@ -35,15 +39,79 @@ const theme = createTheme({
 
 
 function App() {
-  return (
+  const [loading, setLoading] = useState(true);
+  const [authorized, setAuthorized] = useState(false);
+
+
+  useEffect(() => {
+    isAuthorized()
+  },[])
+
+
+  const isAuthorized = () => {
+      fetch(_api_base_url + '/auth/loggedIn', {
+        method: 'POST',
+        body: JSON.stringify(
+          {
+            token: localStorage.getItem(_access_token_key) ? localStorage.getItem(_access_token_key) : null
+          }
+        )
+      })
+      .then((response) => {
+        if(response.status === 401){
+          setAuthorized(false);
+          setLoading(false);
+          return null;
+        }
+        return response.json();
+      })
+      .then((data) => {
+          if(!data) return;
+          setAuthorized(true)
+          setLoading(false)
+      })
+      .catch((err) => {
+        setAuthorized(false);
+        setLoading(false);
+      })
+  }
+
+
+
+
+
+
+
+
+
+
+  if(loading) return (
     <ThemeProvider theme={theme}>
-      <Router>
-      <div className="App">
-        <Layout />
-      </div>
-      </Router>
+      <FullscreenLoading />
     </ThemeProvider>
-  );
+  )
+
+  if(!authorized){
+    return (
+      <ThemeProvider theme={theme}>
+        <div className="App">
+          <Login />
+        </div>
+    </ThemeProvider>
+    )
+  }else{
+    return (
+      <ThemeProvider theme={theme}>
+        <Router basename={'/admin'}>
+        <div className="App">
+          <Layout />
+        </div>
+        </Router>
+      </ThemeProvider>
+    )
+  }
+
+
 }
 
 export default App;

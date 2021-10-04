@@ -22,7 +22,7 @@ const CustomAlert = (props) => {
 
     return ( 
         <Fade in={open}>
-            <Alert onClose={() => {}} className={classes.root} variant="filled" severity={props.severity}>
+            <Alert style={props.style} onClose={() => {}} className={classes.root} variant="filled" severity={props.severity}>
                 {props.content}
             </Alert>
         </Fade>

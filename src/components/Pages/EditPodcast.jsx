@@ -4,11 +4,12 @@ import NotFound from "./404";
 import { makeStyles } from "@material-ui/styles";
 import { TextField } from "@material-ui/core";
 import Grid from '@material-ui/core/Grid';
-import { Fragment, useState } from "react";
+import { Fragment, useState,useRef } from "react";
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
+import { Editor } from '@tinymce/tinymce-react';
 import { Typography } from "@material-ui/core";
 import { styled } from '@material-ui/core/styles';
 import { Button } from "@material-ui/core";
@@ -25,14 +26,14 @@ import { Link as RouterLink } from 'react-router-dom';
 import constants from '../../config'
 import { _helpers } from '../../config';
 
-const {_api_base_url,_post_categories,_youtube_api_key,_youtube_api_parts,_images_path,_homepage} = constants
+const {_api_base_url,_post_categories,_youtube_api_key,_youtube_api_parts,_images_path,_tiny_api_key} = constants
 const {getVideoTitle} = _helpers;
 
 
 
 const useStyles = makeStyles((theme) => (
     {
-        videoEditorWrapper: {
+        podcastEditorWrapper: {
             display: 'flex'
         },
         gridContainer: {
@@ -84,138 +85,95 @@ const Input = styled('input')({
   });
 
 
-const EditVideo = (props) => {
+const EditPodcast = (props) => {
     const theme = useTheme();
     const params = useParams()
     const classes = useStyles();
+    const editorRef = useRef(null);
     const history = useHistory();
-    const [videoData,setVideoData] = useState(null);
-    const [youtubeData, setYoutubeData] = useState(null)
+    const [podcastData,setPodcastData] = useState(null);
     const [loading,setLoading] = useState(true);
     const [showSuccessAlert, setShowSuccessAlert] = useState(false);
     const [showErrorAlert, setShowErrorAlert] = useState(false);
-    const [allVideos, setAllVideos] = useState();
+    const [allPodcasts, setAllPodcasts] = useState();
     const [confirmDialogOpen, setConfigmDialogOpen] = useState(false);
-
+    const [error, setError] = useState(false)
 
     const [title, setTitle] = useState('?');
     const [link, setLink] = useState();
     const [category, setCategory] = useState();
-    const [relatedVideos, setRelatedVideos] = useState();
-
+    const [relatedPodcasts, setRelatedPodcasts] = useState();
+    const [shortDesc, setShortDesc] = useState();
+    const [longDesc, setLongDesc] = useState();
 
     useEffect(() => {
-        getYoutubeData()
-        getVideoData()
-        getAllVideos()
+        getPodcastData()
+        getAllPodcasts()
     },[])
 
-    if(!params.videoId) return <NotFound />;
+    if(!params.podcastId) return <NotFound />;
 
 
-    function getYoutubeData(){
-        const data = fetch(`https://www.googleapis.com/youtube/v3/videos?key=${_youtube_api_key}&id=${params.videoId}&part=${_youtube_api_parts}`)
-        .then((result) => {
-            return result.json();
-        })
-        .then((data) => {
-            setYoutubeData(data)
-            setTitle(data.items[0].snippet.title ? data.items[0].snippet.title  : '??')
-        })
-        .catch((err) => {
-            console.log(err)
-            return null;
-        })
-        return data;
-    }
-
-    function getVideoData(){
-        fetch(_api_base_url + '/video/' + params.videoId)
+    function getPodcastData(){
+        fetch(_api_base_url + '/podcast/' + params.podcastId)
         .then((response) => {
             return response.json();
         })
         .then((data) => {
-            setVideoData(data[0]);
-            if(data[0]){
-                const videoData = data[0];
-                setVideoData(videoData);
-                setLink(videoData.link);
-                setCategory(videoData.category);
+            const podcastData = data[0] ? data[0] : null;
+            if(!podcastData) {
+                setError(true);
+                return;
             }
-           
+            setPodcastData(podcastData)
+            setLink(podcastData.link)
+            setCategory(podcastData.category)
+            setTitle(podcastData.title)
+            setShortDesc(podcastData.description)
+            setLongDesc(podcastData.long_description)
+        })
+    }
+
+    function getAllPodcasts(){
+        fetch(_api_base_url + '/podcast')
+        .then((response) => {
+            return response.json();
+        })
+        .then((data) => {
+            setAllPodcasts(data)
+            getRelatedPodcasts()
         })
         .catch((err) => {
+            setError(true)
+            setLoading(false)
             console.log(err)
         })
     }
 
-    function getAllVideos(){
-        fetch(`${_api_base_url}/video`)
+    function getRelatedPodcasts(){
+        fetch(_api_base_url + '/podcast/' + params.podcastId + '/related')
         .then((response) => {
             return response.json()
         })
-        .then(async (data) => {
-            const videos = data;
-            let videosUpdatedWithTitle = [];
-
-            for await (let video of videos) {
-                const videoDataFromYT = await getVideoTitle(video.id)
-                const title = videoDataFromYT.items[0] && videoDataFromYT.items[0].snippet.title;
-
-                videosUpdatedWithTitle.push({
-                    ...video,
-                    title
-                })
-            }
-
-            setAllVideos(videosUpdatedWithTitle)
-            getRelatedVideos()
-        })
-        .catch((err) => {
-            console.log(err)
+        .then((data) =>{
+            setRelatedPodcasts(data.map(pod => pod.id))
+            console.log(data.map(pod => pod.id))
             setLoading(false)
         })
     }
-
-    function getRelatedVideos(){
-        fetch(`${_api_base_url}/video/${params.videoId}/related`)
-        .then((response) => {
-            return response.json();
-        })
-        .then((data) => {
-            setRelatedVideos(data.map(vid => vid.id))
-            setLoading(false)
-        })
-        .catch((err) => {
-            setLoading(false)
-        })
-    }
-
-    function uploadFeaturedImage(e){
-        const formData = new FormData();
-
-        formData.append("videoId", videoData.id)
-        formData.append("image",e.target.files[0])
-
-        fetch(_api_base_url + '/upload/video', {
-            method: "POST",
-            body: formData
-        })
-        .then(() => {
-            getVideoData()
-        })
-    }
-
    
-    function saveVideo(){
-        const videoData = {
+    function savePodcast(){
+        const pData = {
+            title: title,
+            description: shortDesc,
+            long_description: longDesc,
             category: category,
-            relatedVideos: relatedVideos
+            related: relatedPodcasts
         }
 
-        fetch(_api_base_url + '/video/' + params.videoId, {
-            method: "PUT",
-            body: JSON.stringify(videoData)
+        fetch(_api_base_url + '/podcast/' + podcastData.id, {
+            method: 'PUT',
+            body: JSON.stringify(pData)
         })
         .then(() => {
             ShowAlert("success")
@@ -241,11 +199,23 @@ const EditVideo = (props) => {
 
 
     function onRelatedChange(e){
-        setRelatedVideos(Array.from(e.target.options).filter(o => o.selected).map(o => o.value))
+        setRelatedPodcasts(Array.from(e.target.options).filter(o => o.selected).map(o => o.value))
     }
 
     function onCategoryChange(e){
-        setCategory(e.target.value)
+       setCategory(e.target.value)
+    }
+
+    function onContentChange(content){
+        setLongDesc(content)
+    }
+
+    function onShortDescChange(e){
+        setShortDesc(e.target.value)
+    }
+
+    function onTitleChange(e){
+        setTitle(e.target.value)
     }
 
 
@@ -253,11 +223,11 @@ const EditVideo = (props) => {
         setConfigmDialogOpen(false)
         if(result){
             // Delete post
-            fetch(_api_base_url + '/video/' + videoData.id, {
+            fetch(_api_base_url + '/podcast/' + podcastData.id, {
                 method: 'DELETE'
             })
             .then(() => {
-                history.push("/videos");
+                history.push("/podcasts");
             })
             .catch(() => {
                 ShowAlert('error')
@@ -267,13 +237,14 @@ const EditVideo = (props) => {
         }
     }
 
-    function handleVideoDelete(){
+    function handlePodcastDelete(){
         setConfigmDialogOpen(true)
     }
 
+    
     if(loading){
         return (
-            <Grid spacing={4} container className={classes.videoEditorWrapper}>
+            <Grid spacing={4} container className={classes.podcastEditorWrapper}>
                <Grid item xs={12} md={12}>
                 <Loading />
                </Grid>
@@ -286,10 +257,10 @@ const EditVideo = (props) => {
                 {<CustomAlert open={showErrorAlert} severity={"error"} content={"Hiba történt!"} />}
                 <ConfirmationDialog title={"Megerősítés szükséges!"} body={"Biztosan törli a videót? A művelet nem visszavontható!"} cancelText={"Mégse"} confirmText={"Törlés"} callBack={confirmDialogResult} open={confirmDialogOpen} />
                 <Typography style={{marginBottom: '2rem'}} variant="h6" component="h6">
-                   {title}
+                    {title}
                 </Typography>
-                <Grid spacing={4} container className={classes.videoEditorWrapper}>
-                <Grid style={{height: '600px'}} item xs={12} md={4} lg={4}>
+                <Grid spacing={4} container className={classes.podcastEditorWrapper}>
+                <Grid item xs={12} md={6} lg={6}>
                     <Paper style={{height: '100%'}} className={classes.paper}>
                         <Typography variant="h5" component="h5">
                             Alapvető beállítások
@@ -297,6 +268,9 @@ const EditVideo = (props) => {
                         <Grid spacing={4} container>
                             <Grid item xs={12} md={12}>
                                 <TextField disabled className={classes.textField} id="link" label="Link" variant="standard" value={link}  />
+                            </Grid>
+                            <Grid item xs={12} md={12}>
+                                <TextField className={classes.textField} onChange={onTitleChange} id="link" label="Cím" variant="standard" value={title}  />
                             </Grid>
                             <Grid item xs={12} md={12}>
                                 <FormControl variant="standard" className={classes.formControl}>
@@ -319,17 +293,24 @@ const EditVideo = (props) => {
                                 </FormControl>
                             </Grid>
                             <Grid item xs={12} md={12}>
-                            <iframe id="ytplayer" type="text/html" width="100%" height="200"
-                                src={`https://www.youtube.com/embed/${params.videoId}?autoplay=0`}
-                                frameborder="0"></iframe>
+                                <TextField className={classes.textField} onChange={onShortDescChange} id="short_desc" label="Rövid Leírás" variant="standard" value={shortDesc}  />
                             </Grid>
+                            <Grid item xs={12} md={12}>
+                                <Typography style={{marginBottom: '1rem'}} variant="caption" component="p">
+                                    Előnézet
+                                </Typography>
+                                <div>
+                                    <iframe src={link} width="100%" height="232" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
+                                </div>
+                            </Grid>
+                        
                         </Grid>
                     </Paper>
                 </Grid>
-                <Grid style={{height: '600px'}} item xs={12} md={4} lg={4}>
+                <Grid  item xs={12} md={6} lg={6}>
                     <Paper className={classes.paper}>
                         <Typography variant="h5" component="h5">
-                            Kapcsolódó videók
+                            Kapcsolódó podcastek
                         </Typography>
                         <FormControl style={{marginTop: theme.spacing(3), height: '100%'}} className={classes.formControl}>
                             <InputLabel shrink htmlFor="select-multiple-native">
@@ -338,45 +319,58 @@ const EditVideo = (props) => {
                             <Select
                             multiple
                             native
-                            value={relatedVideos}
+                            value={relatedPodcasts}
                             onChange={onRelatedChange}
                             inputProps={{
                                 id: 'select-multiple-native',
                             }}
                             >
-                            {allVideos
-                            .filter(vid => vid.id != params.videoId)
-                            .map((vid) => (
-                                <option key={vid.id} value={vid.id}>
-                                {vid.title}
+                             {allPodcasts
+                            .filter(pod =>{
+                                return  pod.id != podcastData.id
+                            })
+                            .map((pod) => (
+                                <option key={pod.id} value={pod.id}>
+                                {pod.title}
                                 </option>
                             ))}
                             </Select>
                             </FormControl>
                     </Paper>
                 </Grid>
-                <Grid style={{height: '600px'}} item xs={12} md={4} lg={4}>
-                    <Paper className={classes.paper}>
-                        <Typography variant="h5" component="h5">
-                            Kiemelt kép
-                        </Typography>
-                        <Typography variant="span" component="span">
-                            Ha üres, a Youtube borítókép lesz látható az oldalon
-                        </Typography>
-                        <img className={classes.featuredImage} src={videoData.cover_image ? `${_images_path}/${videoData.cover_image}` : _homepage + '/img/placeholder.jpg'} alt="" />
-                            <label htmlFor="contained-button-file">
-                                <Input onChange={uploadFeaturedImage} accept="image/*" id="contained-button-file" multiple type="file" />
-                                <Button color="primary" variant="contained" component="span">
-                                <PhotoCamera /> Új feltöltése  
-                                </Button>
-                            </label>
-                    </Paper>
-                </Grid>               
             
+                <Grid item xs={12} md={12}>
+                    <Paper className={classes.paper}>
+                        <Typography style={{marginBottom: 16}} variant="h5" component="h5">
+                            Leírás
+                        </Typography>
+                        <Editor
+                            onInit={(evt, editor) => editorRef.current = editor}
+                            onEditorChange={(content,editor) => {onContentChange(content)}}
+                            initialValue={podcastData.long_description}
+                            apiKey={_tiny_api_key}
+                            init={{
+                            height: 550,
+                            menubar: false,
+                            plugins: [
+                                'advlist autolink lists link image charmap print preview anchor',
+                                'searchreplace visualblocks code fullscreen',
+                                'insertdatetime media table paste code help wordcount'
+                            ],
+                            toolbar: 'undo redo | formatselect | ' +
+                            'bold italic backcolor | alignleft aligncenter ' +
+                            'alignright alignjustify | bullist numlist outdent indent | ' +
+                            'removeformat | help',
+
+                        }}
+                        />
+                    </Paper>
+                </Grid>
+
                 <div className={classes.buttonWrapper}>
-                    <Button style={{float: 'left', backgroundColor: "#f44336", color: "#fff"}} onClick={handleVideoDelete} className={classes.saveButton}  variant="contained"><DeleteIcon />Törlés</Button>
+                    <Button style={{float: 'left', backgroundColor: "#f44336", color: "#fff"}} onClick={handlePodcastDelete} className={classes.saveButton}  variant="contained"><DeleteIcon />Törlés</Button>
                     <div>
-                        <Button style={{marginLeft: theme.spacing(2)}} onClick={saveVideo} className={classes.saveButton} color="primary" variant="contained"><Save />Mentés</Button>
+                        <Button style={{marginLeft: theme.spacing(2)}} onClick={savePodcast} className={classes.saveButton} color="primary" variant="contained"><Save />Mentés</Button>
                         <Button component={RouterLink} to="/videos" className={classes.saveButton} color="gray" variant="contained"><ClearIcon />Elvetés</Button>
                     </div>
                 </div>
@@ -388,4 +382,4 @@ const EditVideo = (props) => {
 
 }
  
-export default EditVideo;
+export default EditPodcast;

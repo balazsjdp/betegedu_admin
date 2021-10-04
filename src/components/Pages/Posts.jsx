@@ -47,6 +47,7 @@ const Posts = () => {
     const classes = useStyles()
     const [posts,setPosts] = useState();
     const [loading,setLoading] = useState(true);
+    const [error, setError] = useState(false);
 
     const tableColumns =  [
         { field: 'post_id', headerName: '#',width: 90 },
@@ -131,6 +132,7 @@ const Posts = () => {
         })
         .catch((err) => {
             _helpers.error(err)
+            setError(true)
             setLoading(false)
         })
     }
@@ -156,6 +158,10 @@ const Posts = () => {
 
     if(loading){
        return  <Loading />
+    }
+
+    if(error){
+        return "Nem sikerült betölteni...";
     }
 
     return ( 

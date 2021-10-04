@@ -10,7 +10,7 @@ import { Link } from 'react-router-dom';
 import EditIcon from '@material-ui/icons/Edit';
 import Fab from '@material-ui/core/Fab';
 import AddIcon from '@material-ui/icons/Add';
-import NewVideoDialog from '../ui-components/NewVideoDialog'
+import NewPodcastDialog from '../ui-components/NewPodcastDialog'
 
 
 const {_api_base_url,_post_categories,_youtube_api_key,_youtube_api_parts} = constants
@@ -37,11 +37,11 @@ const useStyles = makeStyles((theme) => (
 
 
 
-const Videos = () => {
+const Podcasts = () => {
     const classes = useStyles()
-    const [videos,setVideos] = useState();
+    const [videos,setPodcasts] = useState();
     const [loading,setLoading] = useState(true);
-    const [newVideoDialogOpen, setNewVideoDialogOpen] = useState(false)
+    const [newPodcastDialogOpen, setnewPodcastDialogOpen] = useState(false)
     const [error, setError] = useState(false);
 
     const tableColumns =  [
@@ -51,19 +51,17 @@ const Videos = () => {
           flex: 1,
         },
         {
+            field: 'date',
+            headerName: 'Hozzáadva',
+            flex: 1
+        },
+        {
           field: 'category',
           headerName: 'Kategória',
           flex:1,
           valueGetter: (params) => {
               return _post_categories.filter(cat => cat.id == params.row.category)[0].name
           }
-        ,
-         
-        },
-        {
-          field: 'link',
-          headerName: 'Link',
-          flex: 1
         },
         {
             field: 'Actions',
@@ -77,7 +75,7 @@ const Videos = () => {
                          variant="contained"
                          color="primary"
                          component={Link} 
-                         to={`/video/${params.id}`}
+                         to={`/podcast/${params.id}`}
                         endIcon={<EditIcon />}
                         >
                         Szerkesztés
@@ -92,29 +90,16 @@ const Videos = () => {
 
 
     useEffect(() => {
-        getVideos()
+        getPodcasts()
     },[])
 
-    const getVideos = () => {
-        fetch(_api_base_url + '/video')
+    const getPodcasts = () => {
+        fetch(_api_base_url + '/podcast')
         .then((response) => {
             return response.json()
         })
         .then(async (data) => {
-            const videos = data;
-            let videosUpdatedWithTitle = [];
-
-            for await (let video of videos) {
-                const videoDataFromYT = await getVideoTitle(video.id)
-                const title = videoDataFromYT.items[0] && videoDataFromYT.items[0].snippet.title;
-
-                videosUpdatedWithTitle.push({
-                    ...video,
-                    title
-                })
-            }
-
-            setVideos(videosUpdatedWithTitle)
+            setPodcasts(data)
             setLoading(false)
         })
         .catch((err) => {
@@ -125,25 +110,25 @@ const Videos = () => {
     }
 
     function onNewPostClick(){
-        setNewVideoDialogOpen(true);
+        setnewPodcastDialogOpen(true);
     }
 
-    function newVideoDialogCallback(link, addVideo){
-        if(addVideo){
-            fetch(_api_base_url + '/video',{
+    function newPodcastDialogCallback(link, addPodcast){
+        if(addPodcast){
+            fetch(_api_base_url + '/podcast',{
                 method: 'POST',
                 body: JSON.stringify({
                     link: link
                 })
             })
             .then(() => {
-                getVideos()
+                getPodcasts()
             })
             .catch((err) => {
                 console.log(err)
             })
         }
-        setNewVideoDialogOpen(false);
+        setnewPodcastDialogOpen(false);
     }
 
 
@@ -157,7 +142,7 @@ const Videos = () => {
 
     return ( 
         <Fragment>
-            <NewVideoDialog callBack={newVideoDialogCallback} open={newVideoDialogOpen} />
+            <NewPodcastDialog callBack={newPodcastDialogCallback} open={newPodcastDialogOpen} />
             <Paper className={classes.paper}>
                 <DataGrid className={classes.table}
                     rows={videos}
@@ -169,11 +154,11 @@ const Videos = () => {
                     getRowId={(row) => row.id}
                 />
             </Paper>
-            <Fab title="Új videó" onClick={onNewPostClick} className={classes.fab} color="secondary" aria-label="Új videó">
+            <Fab title="Új podcast" onClick={onNewPostClick} className={classes.fab} color="secondary" aria-label="Új podcast">
                 <AddIcon />
             </Fab>
         </Fragment>
      );
 }
  
-export default Videos;
+export default Podcasts;

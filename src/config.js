@@ -1,6 +1,6 @@
 const constants = {
-    _api_base_url: "http://127.0.0.1:8000",
-    _images_path: "https://betegedukacio.webition.hu/img/uploads",
+    _api_base_url: "https://skiccekazegeszsegrol.hu/_api",
+    _images_path: "https://skiccekazegeszsegrol.hu/img/uploads",
     _post_categories: [
         {
             id: 1,
@@ -13,7 +13,9 @@ const constants = {
     ],
     _tiny_api_key: "a099g992q1ytxekiw7ai6uvxyccsmfrfrvxwzduas90g1814",
     _youtube_api_key: "AIzaSyAXpnt0JFFJSCeuHt1AHYA5ZkR2bbsOEMU",
-    _youtube_api_parts: "statistics,snippet"
+    _youtube_api_parts: "statistics,snippet",
+    _access_token_key: 'betegedu_access_token',
+    _homepage: '/admin'
 }
 
 export const _helpers = {
@@ -31,6 +33,11 @@ export const _helpers = {
             return null;
         })
         return data;
+    },
+    validateEmail: (email) => {
+        if(!email) return false;
+        const pattern = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+        return pattern.test(String(email).toLowerCase());
     }
 }
 

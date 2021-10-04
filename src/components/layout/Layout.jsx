@@ -17,6 +17,7 @@ import Paper from '@material-ui/core/Paper';
 import MenuIcon from '@material-ui/icons/Menu';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import NotificationsIcon from '@material-ui/icons/Notifications';
+import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 
 import menuItems from '../../data/menuItems';
 import {Link, Route, Switch} from 'react-router-dom';
@@ -25,8 +26,9 @@ import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import NotFound from '../Pages/404';
-
+import constants from '../../config'
 const drawerWidth = 240;
+const {_api_base_url,_access_token_key} = constants;
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -120,6 +122,18 @@ export default function Dashboard() {
   const handleDrawerClose = () => {
     setOpen(false);
   };
+
+  const handleLogoffClick = () => {
+    fetch(_api_base_url + '/auth/logoff', {
+      method: 'POST',
+      body: JSON.stringify({
+        token: localStorage.getItem(_access_token_key)
+      })
+    }).then(() => {
+      window.location.reload()
+    })
+  }
+
   const fixedHeightPaper = clsx(classes.paper, classes.fixedHeight);
 
   return (
@@ -170,6 +184,12 @@ export default function Dashboard() {
                   
                })
            }
+            <ListItem onClick={handleLogoffClick} button>
+              <ListItemIcon>
+                  <ExitToAppIcon />
+              </ListItemIcon>
+              <ListItemText primary="Kijelentkezés"/>
+            </ListItem>  
         </List>
       </Drawer>
       <main className={classes.content}>
