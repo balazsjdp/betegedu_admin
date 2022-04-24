@@ -1,14 +1,18 @@
 const constants = {
-    _api_base_url: "https://skiccekazegeszsegrol.hu/_api",
+    _api_base_url: "https://api.skiccekazegeszsegrol.hu",
     _images_path: "https://skiccekazegeszsegrol.hu/img/uploads",
     _post_categories: [
         {
             id: 1,
-            name: "Gyomorbántalmak"
+            name: "Gyomor-bélrendszeri problémák"
         },
         {
             id: 2,
             name: "Vizelettartási problémák"
+        },
+        {
+            id: 3,
+            name: "Csecsemőkori betegségek"
         }
     ],
     _tiny_api_key: "a099g992q1ytxekiw7ai6uvxyccsmfrfrvxwzduas90g1814",

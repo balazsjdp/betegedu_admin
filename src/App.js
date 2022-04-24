@@ -102,7 +102,7 @@ function App() {
   }else{
     return (
       <ThemeProvider theme={theme}>
-        <Router basename={'/admin'}>
+        <Router basename="/admin">
         <div className="App">
           <Layout />
         </div>

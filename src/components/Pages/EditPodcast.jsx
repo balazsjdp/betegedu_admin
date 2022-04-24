@@ -160,6 +160,9 @@ const EditPodcast = (props) => {
             console.log(data.map(pod => pod.id))
             setLoading(false)
         })
+        .catch((err) => {
+            setLoading(false)
+        })
     }
    
     function savePodcast(){
@@ -314,7 +317,7 @@ const EditPodcast = (props) => {
                         </Typography>
                         <FormControl style={{marginTop: theme.spacing(3), height: '100%'}} className={classes.formControl}>
                             <InputLabel shrink htmlFor="select-multiple-native">
-                            Kapcsolódó videók kiválasztása
+                            Kapcsolódó podcastek kiválasztása
                             </InputLabel>
                             <Select
                             multiple
